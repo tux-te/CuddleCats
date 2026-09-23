@@ -10,6 +10,7 @@ const SIT := "res://Sprites/petal_cutout.png"
 const WALK_FRAME_COUNT := 10
 const JUMP_FRAME_COUNT := 5
 const SLEEP_FRAME_COUNT := 11
+const DANCE_FRAME_COUNT := 10
 
 static func spawn(node: TextureRect) -> void:
 	var walk_frames: Array[Texture2D] = []
@@ -65,5 +66,19 @@ static func sleep(node: TextureRect) -> void:
 		await node.get_tree().create_timer(0.7 if last else 0.3).timeout
 
 static func wake(node: TextureRect) -> void:
+	if is_instance_valid(node):
+		node.texture = load(SIT)
+
+static func dance(node: TextureRect, loops: int = 2) -> void:
+	var dance_frames: Array[Texture2D] = []
+	for i in range(DANCE_FRAME_COUNT):
+		dance_frames.append(load("res://Sprites/petal_dance/frame_%02d.png" % i))
+
+	for _loop in range(loops):
+		for frame in dance_frames:
+			if not is_instance_valid(node):
+				return
+			node.texture = frame
+			await node.get_tree().create_timer(0.15).timeout
 	if is_instance_valid(node):
 		node.texture = load(SIT)

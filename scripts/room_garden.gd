@@ -23,16 +23,36 @@ const WALK_RIGHT_X := 1000.0
 @onready var status_label: Label = %StatusLabel
 @onready var stroll_button: Button = %StrollButton
 @onready var fish_button: Button = %FishButton
+@onready var fish_display: Label = %FishDisplay
+@onready var rod_sprite: TextureRect = %RodSprite
 @onready var http: HTTPRequest = %WeatherRequest
 
+const FISH_MIN_WAIT := 1.5
+const FISH_MAX_WAIT := 3.5
+const FISH_BITE_WINDOW := 1.0
+
+const FISH_COLORS := [
+	{"name": "Blue", "color": Color(0.35, 0.6, 1.0)},
+	{"name": "Orange", "color": Color(1.0, 0.55, 0.15)},
+	{"name": "Golden", "color": Color(1.0, 0.85, 0.2)},
+	{"name": "Purple", "color": Color(0.7, 0.4, 0.95)},
+	{"name": "Green", "color": Color(0.35, 0.85, 0.5)},
+	{"name": "Pink", "color": Color(1.0, 0.55, 0.75)},
+]
+
+enum FishState { IDLE, WAITING, BITING, SHOWING, READY_TO_RELEASE }
+
 var walk_frames: Array[Texture2D] = []
+var rod_frames: Array[Texture2D] = []
 var is_raining := false
 var is_strolling := false
-var is_fishing := false
+var fish_state: FishState = FishState.IDLE
 
 func _ready() -> void:
 	for i in range(10):
 		walk_frames.append(load("res://Sprites/petal_walk/frame_%02d.png" % i))
+	for i in range(10):
+		rod_frames.append(load("res://Sprites/fishing_rod/frame_%02d.png" % i))
 
 	background.texture = load(SUNNY_BG)
 	PetCameo.spawn(%Petal)
@@ -127,19 +147,78 @@ func _on_stroll() -> void:
 	is_strolling = false
 
 func _on_fish() -> void:
-	if is_fishing:
-		return
-	is_fishing = true
+	match fish_state:
+		FishState.IDLE:
+			_start_fishing()
+		FishState.WAITING:
+			Feedback.pop(self, "🎣 not yet...", fish_button.global_position)
+		FishState.BITING:
+			_catch_fish()
+		FishState.SHOWING:
+			_take_photo_with_fish()
+		FishState.READY_TO_RELEASE:
+			_release_fish()
+
+func _play_rod_frames(frame_indices: Array, delay: float) -> void:
+	for index in frame_indices:
+		if not is_instance_valid(self):
+			return
+		rod_sprite.texture = rod_frames[index]
+		await get_tree().create_timer(delay).timeout
+
+func _start_fishing() -> void:
+	fish_state = FishState.WAITING
 	fish_button.disabled = true
 	fish_button.text = "🎣 casting..."
-	await get_tree().create_timer(1.2).timeout
+	await _play_rod_frames([1, 2, 3, 4, 5], 0.08)
+	if not is_instance_valid(self) or fish_state != FishState.WAITING:
+		return
+	fish_button.disabled = false
+	fish_button.text = "🎣 waiting for a bite..."
+	var wait_time := randf_range(FISH_MIN_WAIT, FISH_MAX_WAIT)
+	await get_tree().create_timer(wait_time).timeout
+	if not is_instance_valid(self) or fish_state != FishState.WAITING:
+		return
+	fish_state = FishState.BITING
+	fish_button.text = "🐟 PULL BACK!"
+	rod_sprite.texture = rod_frames[6]
+	Feedback.pop(self, "🐟 bite!", fish_button.global_position)
+	await get_tree().create_timer(FISH_BITE_WINDOW).timeout
+	if not is_instance_valid(self) or fish_state != FishState.BITING:
+		return
+	fish_state = FishState.IDLE
+	fish_button.text = "🎣 Fish"
+	rod_sprite.texture = rod_frames[0]
+	Feedback.pop(self, "the fish got away...", fish_button.global_position)
+
+func _catch_fish() -> void:
+	var caught: Dictionary = FISH_COLORS[randi() % FISH_COLORS.size()]
+	fish_state = FishState.SHOWING
+	fish_button.disabled = true
+	fish_button.text = "🎣 reeling in..."
+	await _play_rod_frames([7, 8, 9], 0.1)
 	if not is_instance_valid(self):
 		return
-	PetalState.catch_fish()
-	Feedback.pop(self, "🐟 caught one!", fish_button.global_position)
-	fish_button.text = "🎣 Fish"
+	rod_sprite.texture = rod_frames[0]
+	fish_display.modulate = caught["color"]
+	fish_display.visible = true
 	fish_button.disabled = false
-	is_fishing = false
+	fish_button.text = "📸 Take a Photo"
+	PetalState.catch_fish()
+	PetCameo.jump_for_joy(%Petal)
+	Feedback.pop(self, "👀 a %s fish!" % caught["name"], fish_display.global_position)
+
+func _take_photo_with_fish() -> void:
+	fish_state = FishState.READY_TO_RELEASE
+	fish_button.text = "🌊 Let It Go"
+	PetalState.take_photo()
+	Feedback.pop(self, "📸 say cheese!", fish_display.global_position)
+
+func _release_fish() -> void:
+	fish_state = FishState.IDLE
+	fish_display.visible = false
+	fish_button.text = "🎣 Fish"
+	Feedback.pop(self, "🌊 back you go!", fish_button.global_position)
 
 func _walk_to(target_x: float) -> void:
 	var start_x: float = %Petal.position.x
