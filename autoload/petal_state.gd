@@ -13,7 +13,7 @@ const MAX_STAT := 100.0
 const DECAY_PER_SEC := 0.15
 
 var pet_name := "Princess Petal"
-var friend_name := "Marigold"
+var friend_name := "Princess Marigold"
 var friend_visiting := false
 var hunger := 80.0
 var happiness := 80.0
