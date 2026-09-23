@@ -18,4 +18,5 @@ func _on_cuddle() -> void:
 
 func _on_nap() -> void:
 	PetalState.nap()
+	PetCameo.sleep(%Petal)
 	Feedback.pop(self, "💤 zzz", %NapButton.global_position)

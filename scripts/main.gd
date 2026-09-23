@@ -9,6 +9,9 @@ const ROOMS := {
 	"grooming": preload("res://scenes/rooms/grooming_room.tscn"),
 	"obstacle": preload("res://scenes/rooms/obstacle_course.tscn"),
 	"garden": preload("res://scenes/rooms/garden.tscn"),
+	"photo": preload("res://scenes/rooms/photo_booth.tscn"),
+	"party": preload("res://scenes/rooms/party.tscn"),
+	"stickers": preload("res://scenes/rooms/sticker_book.tscn"),
 }
 
 const PLAY_FRAME_COUNT := 10
@@ -76,6 +79,9 @@ func _ready() -> void:
 	%GroomingButton.pressed.connect(_show_room.bind("grooming"))
 	%ObstacleButton.pressed.connect(_show_room.bind("obstacle"))
 	%GardenButton.pressed.connect(_show_room.bind("garden"))
+	%PhotoButton.pressed.connect(_show_room.bind("photo"))
+	%PartyButton.pressed.connect(_show_room.bind("party"))
+	%StickersButton.pressed.connect(_show_room.bind("stickers"))
 
 	_show_room("bedroom")
 

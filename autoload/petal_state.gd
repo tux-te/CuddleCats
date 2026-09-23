@@ -8,6 +8,7 @@ signal stats_changed
 signal accessories_changed
 signal play_animation_requested
 signal friend_changed
+signal sticker_earned
 
 const MAX_STAT := 100.0
 const DECAY_PER_SEC := 0.15
@@ -28,6 +29,31 @@ var accessories := {
 	"scarf": false,
 }
 
+# Sticker Book: id -> {emoji, label}. Earned the first time you do the
+# matching activity; "earned" tracks which ids have been unlocked.
+const STICKERS := {
+	"feed": {"emoji": "🍓", "label": "Snack Time"},
+	"play": {"emoji": "🧶", "label": "Playtime"},
+	"pet": {"emoji": "🥰", "label": "Best Friends"},
+	"cuddle": {"emoji": "💞", "label": "Cozy Cuddles"},
+	"bathe": {"emoji": "🛁", "label": "Bath Time"},
+	"brush": {"emoji": "✨", "label": "Brushed & Fluffy"},
+	"nap": {"emoji": "😴", "label": "Sweet Dreams"},
+	"stroll": {"emoji": "🌷", "label": "Garden Stroll"},
+	"obstacle": {"emoji": "🏆", "label": "Champion"},
+	"friend": {"emoji": "🐾", "label": "Good Friends"},
+	"photo": {"emoji": "📸", "label": "Say Cheese"},
+	"party": {"emoji": "🎉", "label": "Party Time"},
+	"fish": {"emoji": "🐟", "label": "Fisher"},
+}
+var earned_stickers := {}
+
+func award_sticker(id: String) -> void:
+	if not STICKERS.has(id) or earned_stickers.get(id, false):
+		return
+	earned_stickers[id] = true
+	sticker_earned.emit(id)
+
 func _ready() -> void:
 	var timer := Timer.new()
 	timer.wait_time = 1.0
@@ -46,51 +72,76 @@ func feed() -> void:
 	hunger = minf(MAX_STAT, hunger + 25.0)
 	happiness = minf(MAX_STAT, happiness + 5.0)
 	stats_changed.emit()
+	award_sticker("feed")
 
 func play() -> void:
 	happiness = minf(MAX_STAT, happiness + 20.0)
 	energy = maxf(0.0, energy - 10.0)
 	cleanliness = maxf(0.0, cleanliness - 5.0)
 	stats_changed.emit()
+	award_sticker("play")
 
 func pet_her() -> void:
 	happiness = minf(MAX_STAT, happiness + 12.0)
 	stats_changed.emit()
+	award_sticker("pet")
 
 func cuddle() -> void:
 	happiness = minf(MAX_STAT, happiness + 18.0)
 	energy = minf(MAX_STAT, energy + 5.0)
 	stats_changed.emit()
+	award_sticker("cuddle")
 
 func bathe() -> void:
 	cleanliness = minf(MAX_STAT, cleanliness + 30.0)
 	happiness = minf(MAX_STAT, happiness + 5.0)
 	stats_changed.emit()
+	award_sticker("bathe")
 
 func brush() -> void:
 	cleanliness = minf(MAX_STAT, cleanliness + 15.0)
 	happiness = minf(MAX_STAT, happiness + 10.0)
 	stats_changed.emit()
+	award_sticker("brush")
 
 func nap() -> void:
 	energy = minf(MAX_STAT, energy + 35.0)
 	stats_changed.emit()
+	award_sticker("nap")
 
 func stroll() -> void:
 	happiness = minf(MAX_STAT, happiness + 20.0)
 	energy = maxf(0.0, energy - 10.0)
 	stats_changed.emit()
+	award_sticker("stroll")
 
 func obstacle_course() -> void:
 	happiness = minf(MAX_STAT, happiness + 25.0)
 	energy = maxf(0.0, energy - 15.0)
 	cleanliness = maxf(0.0, cleanliness - 8.0)
 	stats_changed.emit()
+	award_sticker("obstacle")
+
+func take_photo() -> void:
+	happiness = minf(MAX_STAT, happiness + 10.0)
+	stats_changed.emit()
+	award_sticker("photo")
+
+func celebrate_party() -> void:
+	happiness = MAX_STAT
+	stats_changed.emit()
+	award_sticker("party")
+
+func catch_fish() -> void:
+	happiness = minf(MAX_STAT, happiness + 10.0)
+	stats_changed.emit()
+	award_sticker("fish")
 
 func toggle_friend_visit() -> void:
 	friend_visiting = not friend_visiting
 	if friend_visiting:
 		happiness = minf(MAX_STAT, happiness + 20.0)
+		award_sticker("friend")
 	stats_changed.emit()
 	friend_changed.emit()
 

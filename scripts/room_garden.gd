@@ -22,11 +22,13 @@ const WALK_RIGHT_X := 1000.0
 @onready var background: TextureRect = %Background
 @onready var status_label: Label = %StatusLabel
 @onready var stroll_button: Button = %StrollButton
+@onready var fish_button: Button = %FishButton
 @onready var http: HTTPRequest = %WeatherRequest
 
 var walk_frames: Array[Texture2D] = []
 var is_raining := false
 var is_strolling := false
+var is_fishing := false
 
 func _ready() -> void:
 	for i in range(10):
@@ -38,10 +40,27 @@ func _ready() -> void:
 	stroll_button.disabled = true
 	status_label.text = "🌤️ Checking today's weather in Washington, DC..."
 
+	fish_button.pressed.connect(_on_fish)
+
 	http.request_completed.connect(_on_weather_response)
 	var err := http.request(WEATHER_URL)
 	if err != OK:
 		_use_fallback()
+
+	_apply_season_tint()
+
+func _apply_season_tint() -> void:
+	var month: int = Time.get_datetime_dict_from_system()["month"]
+	var tint := Color(1, 1, 1)
+	if month in [3, 4, 5]:
+		tint = Color(0.95, 1.0, 0.93) # spring
+	elif month in [6, 7, 8]:
+		tint = Color(1.0, 0.98, 0.9) # summer
+	elif month in [9, 10, 11]:
+		tint = Color(1.0, 0.9, 0.78) # fall
+	else:
+		tint = Color(0.9, 0.95, 1.0) # winter
+	background.modulate = tint
 
 func _on_weather_response(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if not is_instance_valid(self):
@@ -106,6 +125,21 @@ func _on_stroll() -> void:
 	Feedback.pop(self, "🌼 lovely stroll!", stroll_button.global_position)
 	stroll_button.disabled = is_raining
 	is_strolling = false
+
+func _on_fish() -> void:
+	if is_fishing:
+		return
+	is_fishing = true
+	fish_button.disabled = true
+	fish_button.text = "🎣 casting..."
+	await get_tree().create_timer(1.2).timeout
+	if not is_instance_valid(self):
+		return
+	PetalState.catch_fish()
+	Feedback.pop(self, "🐟 caught one!", fish_button.global_position)
+	fish_button.text = "🎣 Fish"
+	fish_button.disabled = false
+	is_fishing = false
 
 func _walk_to(target_x: float) -> void:
 	var start_x: float = %Petal.position.x

@@ -9,6 +9,7 @@ extends RefCounted
 const SIT := "res://Sprites/petal_cutout.png"
 const WALK_FRAME_COUNT := 10
 const JUMP_FRAME_COUNT := 5
+const SLEEP_FRAME_COUNT := 11
 
 static func spawn(node: TextureRect) -> void:
 	var walk_frames: Array[Texture2D] = []
@@ -46,5 +47,23 @@ static func jump_for_joy(node: TextureRect) -> void:
 			return
 		node.texture = jump_frames[i]
 		await node.get_tree().create_timer(0.1).timeout
+	if is_instance_valid(node):
+		node.texture = load(SIT)
+
+# Plays her yawn-to-asleep sequence and leaves her sleeping (doesn't
+# revert to the sitting pose) - call wake(node) to bring her back.
+static func sleep(node: TextureRect) -> void:
+	var sleep_frames: Array[Texture2D] = []
+	for i in range(SLEEP_FRAME_COUNT):
+		sleep_frames.append(load("res://Sprites/petal_sleep/frame_%02d.png" % i))
+
+	for i in range(sleep_frames.size()):
+		if not is_instance_valid(node):
+			return
+		node.texture = sleep_frames[i]
+		var last := i == sleep_frames.size() - 1
+		await node.get_tree().create_timer(0.7 if last else 0.3).timeout
+
+static func wake(node: TextureRect) -> void:
 	if is_instance_valid(node):
 		node.texture = load(SIT)

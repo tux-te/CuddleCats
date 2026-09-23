@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/room_stickers.gd" id="1"]
+
+[node name="StickerBook" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.97, 0.9, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 420.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.23, 0.16, 0.16, 1)
+text = "📔 Sticker Book"
+
+[node name="SubLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 20.0
+offset_top = 58.0
+offset_right = 500.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+text = "0 / 13 collected"
+
+[node name="Grid" type="GridContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 40.0
+offset_top = 96.0
+offset_right = 1240.0
+offset_bottom = 400.0
+columns = 7
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
