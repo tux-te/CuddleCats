@@ -19,6 +19,10 @@ func _ready() -> void:
 	PetalState.stats_changed.connect(_update_food_icon)
 	_update_food_icon()
 
+	%Friend.texture = load("res://Sprites/friend_cutout.png")
+	%InviteButton.pressed.connect(_on_invite)
+	_refresh_friend()
+
 func _update_food_icon() -> void:
 	var level := _hunger_level()
 	%FeedButton.icon = load("res://Sprites/food_bowl/level_%d.png" % level)
@@ -44,3 +48,13 @@ func _on_play() -> void:
 	PetalState.play()
 	PetalState.play_animation_requested.emit()
 	Feedback.pop(self, "🎉 wheee!", %PlayButton.global_position)
+
+func _on_invite() -> void:
+	PetalState.toggle_friend_visit()
+	_refresh_friend()
+	var text := "🐾 %s is here!" % PetalState.friend_name if PetalState.friend_visiting else "bye bye!"
+	Feedback.pop(self, text, %InviteButton.global_position)
+
+func _refresh_friend() -> void:
+	%Friend.visible = PetalState.friend_visiting
+	%InviteButton.text = "👋 Say Bye" if PetalState.friend_visiting else "🐾 Invite Over"

@@ -7,11 +7,14 @@ extends Node
 signal stats_changed
 signal accessories_changed
 signal play_animation_requested
+signal friend_changed
 
 const MAX_STAT := 100.0
 const DECAY_PER_SEC := 0.15
 
 var pet_name := "Princess Petal"
+var friend_name := "Marigold"
+var friend_visiting := false
 var hunger := 80.0
 var happiness := 80.0
 var energy := 80.0
@@ -73,11 +76,23 @@ func nap() -> void:
 	energy = minf(MAX_STAT, energy + 35.0)
 	stats_changed.emit()
 
+func stroll() -> void:
+	happiness = minf(MAX_STAT, happiness + 20.0)
+	energy = maxf(0.0, energy - 10.0)
+	stats_changed.emit()
+
 func obstacle_course() -> void:
 	happiness = minf(MAX_STAT, happiness + 25.0)
 	energy = maxf(0.0, energy - 15.0)
 	cleanliness = maxf(0.0, cleanliness - 8.0)
 	stats_changed.emit()
+
+func toggle_friend_visit() -> void:
+	friend_visiting = not friend_visiting
+	if friend_visiting:
+		happiness = minf(MAX_STAT, happiness + 20.0)
+	stats_changed.emit()
+	friend_changed.emit()
 
 func toggle_accessory(id: String) -> void:
 	if not accessories.has(id):
