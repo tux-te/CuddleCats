@@ -9,7 +9,7 @@ const BRUSH_FRAME_COUNT := 5
 var is_brushing := false
 
 func _ready() -> void:
-	background.texture = load("res://Sprites/backgrounds/grooming_room.jpg")
+	background.texture = load(PetalState.room_bg("grooming", "res://Sprites/backgrounds/grooming_room.jpg"))
 	PetCameo.spawn(%Petal)
 	%BrushButton.pressed.connect(_on_brush)
 	%BatheButton.pressed.connect(_on_bathe)
@@ -38,5 +38,4 @@ func _play_brush_anim() -> void:
 	is_brushing = false
 
 func _on_bathe() -> void:
-	PetalState.bathe()
-	Feedback.pop(self, "🛁 splash!", %BatheButton.global_position)
+	PetalState.navigate_to_room.emit("bath")

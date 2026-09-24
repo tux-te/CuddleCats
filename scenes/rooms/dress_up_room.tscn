@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/room_dressup.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Sprites/makeup_brush1.png" id="2"]
+[ext_resource type="Texture2D" path="res://Sprites/makeup_mascara_icon.png" id="3"]
+[ext_resource type="Texture2D" path="res://Sprites/makeup_lipstick_icon.png" id="4"]
+[ext_resource type="Texture2D" path="res://Sprites/makeup_remover_icon.png" id="5"]
 
 [node name="DressUpRoom" type="Control"]
 layout_mode = 3
@@ -50,15 +54,16 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Buttons" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -320.0
+offset_left = -390.0
 offset_top = -110.0
-offset_right = 320.0
+offset_right = 390.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -95,3 +100,76 @@ layout_mode = 2
 toggle_mode = true
 theme_override_font_sizes/font_size = 18
 text = "Scarf"
+
+[node name="MakeupButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "💄 Makeup"
+
+[node name="BrushPicker" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -160.0
+offset_right = 380.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="BlushBrushButton" type="TextureButton" parent="BrushPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 240)
+layout_mode = 2
+texture_normal = ExtResource("2")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="MascaraBrushButton" type="TextureButton" parent="BrushPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 240)
+layout_mode = 2
+texture_normal = ExtResource("3")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="LipstickBrushButton" type="TextureButton" parent="BrushPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 240)
+layout_mode = 2
+texture_normal = ExtResource("4")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="RemoverButton" type="TextureButton" parent="BrushPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 240)
+layout_mode = 2
+texture_normal = ExtResource("5")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="CollarButtons" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -390.0
+offset_top = -110.0
+offset_right = 390.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 20

@@ -28,7 +28,8 @@ func _set_backdrop(id: String) -> void:
 	background.texture = load(BACKDROPS[id])
 
 func _on_snap() -> void:
-	PetalState.take_photo()
+	var image := get_viewport().get_texture().get_image()
+	PetalState.take_photo(ImageTexture.create_from_image(image))
 	Feedback.pop(self, "📸 cheese!", snap_button.global_position)
 	var tween := create_tween()
 	flash.modulate.a = 1.0

@@ -9,6 +9,7 @@ const PetCameo = preload("res://scripts/pet_cameo.gd")
 var is_dancing := false
 
 func _ready() -> void:
+	%Background.texture = load(PetalState.room_bg("party", "res://Sprites/backgrounds/party_room.jpg"))
 	PetCameo.spawn(%Petal)
 	celebrate_button.pressed.connect(_on_celebrate)
 	dance_button.pressed.connect(_on_dance)

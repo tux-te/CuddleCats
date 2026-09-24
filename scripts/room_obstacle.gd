@@ -10,7 +10,6 @@ const WALK_SEGMENTS := [[60.0, 300.0], [380.0, 580.0], [660.0, 860.0], [940.0, 1
 const JUMP_SEGMENTS := [[300.0, 380.0], [580.0, 660.0], [860.0, 940.0]]
 const BASE_Y := 280.0
 const JUMP_HEIGHT := 45.0
-const SIT := "res://Sprites/petal_cutout.png"
 
 @onready var runner: TextureRect = %Runner
 @onready var go_button: Button = %GoButton
@@ -20,11 +19,9 @@ var jump_frames: Array[Texture2D] = []
 var is_running := false
 
 func _ready() -> void:
-	for i in range(10):
-		walk_frames.append(load("res://Sprites/petal_walk/frame_%02d.png" % i))
-	for i in range(5):
-		jump_frames.append(load("res://Sprites/petal_jump/frame_%02d.png" % i))
-	runner.texture = load(SIT)
+	walk_frames = PetalState.anim_frames("walk")
+	jump_frames = PetalState.anim_frames("jump")
+	runner.texture = load(PetalState.cutout_path())
 	go_button.pressed.connect(_on_go)
 
 func _on_go() -> void:
@@ -54,16 +51,18 @@ func _run_walk(from_x: float, to_x: float) -> void:
 	var steps := 10
 	runner.position.y = BASE_Y
 	for i in range(steps):
-		runner.texture = walk_frames[i % walk_frames.size()]
+		if not walk_frames.is_empty():
+			runner.texture = walk_frames[i % walk_frames.size()]
 		runner.position.x = lerp(from_x, to_x, float(i + 1) / float(steps))
 		await get_tree().create_timer(0.06).timeout
 		if not is_instance_valid(self):
 			return
 
 func _run_jump(from_x: float, to_x: float) -> void:
-	var steps := jump_frames.size()
+	var steps := jump_frames.size() if not jump_frames.is_empty() else 8
 	for i in range(steps):
-		runner.texture = jump_frames[i]
+		if not jump_frames.is_empty():
+			runner.texture = jump_frames[i]
 		var t := float(i + 1) / float(steps)
 		runner.position.x = lerp(from_x, to_x, t)
 		runner.position.y = BASE_Y - JUMP_HEIGHT * sin(PI * t)
@@ -73,9 +72,13 @@ func _run_jump(from_x: float, to_x: float) -> void:
 	runner.position.y = BASE_Y
 
 func _celebrate() -> void:
-	for i in range(jump_frames.size()):
-		runner.texture = jump_frames[i]
-		await get_tree().create_timer(0.1).timeout
-		if not is_instance_valid(self):
-			return
-	runner.texture = load(SIT)
+	if jump_frames.is_empty():
+		await get_tree().create_timer(0.5).timeout
+	else:
+		for i in range(jump_frames.size()):
+			runner.texture = jump_frames[i]
+			await get_tree().create_timer(0.1).timeout
+			if not is_instance_valid(self):
+				return
+	if is_instance_valid(self):
+		runner.texture = load(PetalState.cutout_path())

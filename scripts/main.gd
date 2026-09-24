@@ -1,31 +1,24 @@
 extends Control
 
 const Feedback = preload("res://scripts/room_feedback.gd")
+const PetCameo = preload("res://scripts/pet_cameo.gd")
 
 const ROOMS := {
 	"bedroom": preload("res://scenes/rooms/bedroom.tscn"),
 	"living": preload("res://scenes/rooms/living_room.tscn"),
 	"dressup": preload("res://scenes/rooms/dress_up_room.tscn"),
 	"grooming": preload("res://scenes/rooms/grooming_room.tscn"),
+	"bath": preload("res://scenes/rooms/bath_room.tscn"),
 	"obstacle": preload("res://scenes/rooms/obstacle_course.tscn"),
 	"garden": preload("res://scenes/rooms/garden.tscn"),
+	"fishing": preload("res://scenes/rooms/fishing_pond.tscn"),
 	"photo": preload("res://scenes/rooms/photo_booth.tscn"),
+	"photobook": preload("res://scenes/rooms/photo_book.tscn"),
 	"party": preload("res://scenes/rooms/party.tscn"),
 	"stickers": preload("res://scenes/rooms/sticker_book.tscn"),
 }
 
-const PLAY_FRAME_COUNT := 10
 const OWNER_WALK_FRAME_COUNT := 5
-
-# Small accessory icons overlaid on whichever room's cat is showing,
-# anchored proportionally to her TextureRect so they land on her
-# head/neck no matter which room-sized box she's sitting in.
-const ACCESSORY_ANCHORS := {
-	"bow": {"l": 0.327, "t": 0.025, "r": 0.427, "b": 0.196},
-	"flower": {"l": 0.573, "t": 0.025, "r": 0.673, "b": 0.196},
-	"sunglasses": {"l": 0.373, "t": 0.294, "r": 0.633, "b": 0.491},
-	"scarf": {"l": 0.333, "t": 0.515, "r": 0.667, "b": 0.699},
-}
 
 @onready var room_slot: Control = %RoomSlot
 @onready var name_label: Label = %NameLabel
@@ -34,24 +27,26 @@ const ACCESSORY_ANCHORS := {
 @onready var happiness_bar: ProgressBar = %HappinessBar
 @onready var energy_bar: ProgressBar = %EnergyBar
 @onready var clean_bar: ProgressBar = %CleanBar
+@onready var pets_button: Button = %PetsButton
+@onready var pet_picker: Control = %PetPicker
+@onready var pet_list: HBoxContainer = %PetList
 
 var current_room: Control = null
+var current_room_id := "bedroom"
 var room_petal: TextureRect = null
 var accessory_nodes := {}
 var static_owner: Texture2D
-var play_frames: Array[Texture2D] = []
 var is_playing := false
 
 func _ready() -> void:
 	static_owner = load("res://Sprites/owner.png")
 	name_label.text = PetalState.pet_name
 
-	for i in range(PLAY_FRAME_COUNT):
-		play_frames.append(load("res://Sprites/petal_play/frame_%02d.png" % i))
-
 	PetalState.stats_changed.connect(_refresh_stats)
 	PetalState.accessories_changed.connect(_refresh_accessories)
 	PetalState.play_animation_requested.connect(_play_toy_animation)
+	PetalState.navigate_to_room.connect(_show_room)
+	PetalState.pet_changed.connect(_on_pet_changed)
 	_refresh_stats()
 
 	%BedroomButton.pressed.connect(_show_room.bind("bedroom"))
@@ -64,9 +59,13 @@ func _ready() -> void:
 	%PartyButton.pressed.connect(_show_room.bind("party"))
 	%StickersButton.pressed.connect(_show_room.bind("stickers"))
 
+	pets_button.pressed.connect(_open_pet_picker)
+	%ClosePetPickerButton.pressed.connect(_close_pet_picker)
+
 	_show_room("bedroom")
 
 func _show_room(id: String) -> void:
+	current_room_id = id
 	if current_room:
 		current_room.queue_free()
 	room_petal = null
@@ -74,6 +73,30 @@ func _show_room(id: String) -> void:
 	current_room = ROOMS[id].instantiate()
 	room_slot.add_child(current_room)
 	_wire_room_pet()
+
+func _open_pet_picker() -> void:
+	for child in pet_list.get_children():
+		child.queue_free()
+	for id in PetalState.PETS:
+		var btn := TextureButton.new()
+		btn.texture_normal = load(String(PetalState.PETS[id]["cutout"]))
+		btn.ignore_texture_size = true
+		btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		btn.custom_minimum_size = Vector2(160, 220)
+		btn.pressed.connect(_on_pet_picked.bind(id))
+		pet_list.add_child(btn)
+	pet_picker.visible = true
+
+func _close_pet_picker() -> void:
+	pet_picker.visible = false
+
+func _on_pet_picked(id: String) -> void:
+	PetalState.switch_pet(id)
+	_close_pet_picker()
+
+func _on_pet_changed() -> void:
+	name_label.text = PetalState.pet_name
+	_show_room(current_room_id)
 
 # Rooms that show Petal (all but the Obstacle Course and Sticker Book)
 # expose her via a unique "Petal" TextureRect - that's the one cat in
@@ -92,15 +115,16 @@ func _wire_room_pet() -> void:
 	_spawn_owner_beside(room_petal)
 
 func _build_accessory_overlays() -> void:
-	for id in ACCESSORY_ANCHORS:
+	var pet_accessories: Dictionary = PetalState.PETS[PetalState.active_pet]["accessories"]
+	for id in pet_accessories:
 		var icon := TextureRect.new()
 		icon.name = "Accessory_%s" % id
-		icon.texture = load("res://Sprites/%s.png" % id)
+		icon.texture = load(String(pet_accessories[id]["icon"]))
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.visible = false
-		var a: Dictionary = ACCESSORY_ANCHORS[id]
+		var a: Dictionary = pet_accessories[id]["anchor"]
 		icon.anchor_left = a["l"]
 		icon.anchor_top = a["t"]
 		icon.anchor_right = a["r"]
@@ -172,16 +196,25 @@ func _play_toy_animation() -> void:
 	is_playing = true
 	for id in accessory_nodes:
 		accessory_nodes[id].visible = false
-	for i in range(play_frames.size()):
+
+	if not PetalState.has_anim("play"):
+		await PetCameo.jump_for_joy(room_petal)
+		is_playing = false
+		if is_instance_valid(room_petal):
+			_refresh_accessories()
+		return
+
+	var frames := PetalState.anim_frames("play")
+	for i in range(frames.size()):
 		if not is_instance_valid(room_petal):
 			is_playing = false
 			return
-		room_petal.texture = play_frames[i]
-		var last := i == play_frames.size() - 1
+		room_petal.texture = frames[i]
+		var last := i == frames.size() - 1
 		await get_tree().create_timer(0.7 if last else 0.18).timeout
 	is_playing = false
 	if is_instance_valid(room_petal):
-		room_petal.texture = load("res://Sprites/petal_cutout.png")
+		room_petal.texture = load(PetalState.cutout_path())
 		_refresh_accessories()
 
 func _refresh_stats() -> void:
