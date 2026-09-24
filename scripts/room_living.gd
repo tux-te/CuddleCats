@@ -36,6 +36,12 @@ func _ready() -> void:
 	idle_timer.timeout.connect(_on_friend_idle_tick)
 	add_child(idle_timer)
 
+	%TricksButton.visible = PetalState.has_tricks()
+	%TricksButton.pressed.connect(_on_tricks_pressed)
+	%SitTrickButton.pressed.connect(_on_trick_chosen.bind("sit"))
+	%ComeTrickButton.pressed.connect(_on_trick_chosen.bind("come"))
+	%WaveTrickButton.pressed.connect(_on_trick_chosen.bind("wave"))
+
 func _update_food_icon() -> void:
 	var level := _hunger_level()
 	var bowl_texture := load("res://Sprites/food_bowl/level_%d.png" % level)
@@ -155,3 +161,13 @@ func _hop(node: TextureRect, times: int, height: float) -> void:
 		tween.tween_property(node, "position:y", base_y - height, 0.15).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(node, "position:y", base_y, 0.15).set_trans(Tween.TRANS_BOUNCE)
 		await tween.finished
+
+func _on_tricks_pressed() -> void:
+	%TrickPicker.visible = not %TrickPicker.visible
+
+func _on_trick_chosen(trick_id: String) -> void:
+	%TrickPicker.visible = false
+	PetalState.do_trick(trick_id)
+	var info: Dictionary = PetalState.TRICK_INFO[trick_id]
+	Feedback.pop(self, "%s good %s!" % [info["emoji"], info["label"].to_lower()], %TricksButton.global_position)
+	await PetCameo.perform_trick(%Petal, trick_id)

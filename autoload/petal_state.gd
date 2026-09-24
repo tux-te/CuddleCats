@@ -56,6 +56,7 @@ const PETS := {
 			"collar_green": {"icon": "res://Sprites/pompom_collars/green.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
 		},
 		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
+		"tricks": ["sit", "come", "wave"],
 	},
 	"sheila": {
 		"name": "Sheila",
@@ -68,6 +69,7 @@ const PETS := {
 			"collar_green": {"icon": "res://Sprites/pompom_collars/green.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
 		},
 		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
+		"tricks": ["sit", "come", "wave"],
 	},
 	"kiwi": {
 		"name": "Kiwi",
@@ -133,6 +135,25 @@ func room_bg(room_id: String, default_path: String) -> String:
 	var rooms: Dictionary = PETS[active_pet].get("rooms", {})
 	return String(rooms.get(room_id, default_path))
 
+const TRICK_INFO := {
+	"sit": {"label": "Sit", "emoji": "🐾"},
+	"come": {"label": "Come", "emoji": "👋"},
+	"wave": {"label": "Wave", "emoji": "🖐️"},
+}
+
+func has_tricks() -> bool:
+	return not tricks().is_empty()
+
+func tricks() -> Array:
+	return PETS[active_pet].get("tricks", [])
+
+func do_trick(trick_id: String) -> void:
+	if not tricks().has(trick_id):
+		return
+	happiness = minf(MAX_STAT, happiness + 10.0)
+	stats_changed.emit()
+	award_sticker("tricks")
+
 const FRIENDS := {
 	"marigold": {"name": "Princess Marigold", "cutout": "res://Sprites/friend_cutout.png"},
 	"blossom": {"name": "Princess Blossom", "cutout": "res://Sprites/friend_blossom.png"},
@@ -180,6 +201,7 @@ const STICKERS := {
 	"photo": {"emoji": "📸", "label": "Say Cheese"},
 	"party": {"emoji": "🎉", "label": "Party Time"},
 	"fish": {"emoji": "🐟", "label": "Fisher"},
+	"tricks": {"emoji": "🎾", "label": "Good Trick!"},
 }
 var earned_stickers := {}
 

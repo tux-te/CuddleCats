@@ -103,3 +103,48 @@ static func _wiggle_tween(node: TextureRect) -> void:
 	await tween.finished
 	if is_instance_valid(node):
 		node.texture = load(PetalState.cutout_path())
+
+# Trick training: sit / come / wave. None of these need dedicated art -
+# they read from whatever pose art the pet already has (falling back to
+# her sit pose) and act the trick out with a tween.
+static func perform_trick(node: TextureRect, trick_id: String) -> void:
+	match trick_id:
+		"wave":
+			await _trick_wave(node)
+		"sit":
+			await _trick_sit(node)
+		"come":
+			await _trick_come(node)
+
+static func _trick_wave(node: TextureRect) -> void:
+	if PetalState.has_anim("wave"):
+		node.texture = load(PetalState.static_pose("wave"))
+	node.pivot_offset = node.size / 2.0
+	var tween := node.create_tween()
+	tween.set_loops(3)
+	tween.tween_property(node, "rotation_degrees", 10.0, 0.15)
+	tween.tween_property(node, "rotation_degrees", -6.0, 0.15)
+	await tween.finished
+	node.rotation_degrees = 0.0
+	if is_instance_valid(node):
+		node.texture = load(PetalState.cutout_path())
+
+static func _trick_sit(node: TextureRect) -> void:
+	node.texture = load(PetalState.cutout_path())
+	node.pivot_offset = node.size / 2.0
+	var tween := node.create_tween()
+	tween.tween_property(node, "scale", Vector2(1.08, 0.82), 0.12)
+	tween.tween_property(node, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BOUNCE)
+	await tween.finished
+
+static func _trick_come(node: TextureRect) -> void:
+	node.texture = load(PetalState.cutout_path())
+	node.pivot_offset = node.size / 2.0
+	var base_scale := node.scale
+	for _i in range(2):
+		if not is_instance_valid(node):
+			return
+		var tween := node.create_tween()
+		tween.tween_property(node, "scale", base_scale * 1.18, 0.16).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(node, "scale", base_scale, 0.16).set_trans(Tween.TRANS_SINE)
+		await tween.finished

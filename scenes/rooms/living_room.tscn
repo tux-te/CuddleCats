@@ -119,6 +119,44 @@ texture_normal = ExtResource("5")
 ignore_texture_size = true
 stretch_mode = 5
 
+[node name="TrickPicker" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -255.0
+offset_top = -70.0
+offset_right = 255.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="SitTrickButton" type="Button" parent="TrickPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🐾 Sit"
+
+[node name="ComeTrickButton" type="Button" parent="TrickPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "👋 Come"
+
+[node name="WaveTrickButton" type="Button" parent="TrickPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🖐️ Wave"
+
 [node name="FoodBowl" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
@@ -171,3 +209,11 @@ custom_minimum_size = Vector2(160, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "🐾 Invite Over"
+
+[node name="TricksButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(160, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🎾 Tricks"
