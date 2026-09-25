@@ -12,6 +12,8 @@ signal sticker_earned
 signal navigate_to_room(room_id: String)
 signal photo_taken
 signal pet_changed
+signal coins_changed
+signal milestone_reached(total: int)
 
 const MAX_STAT := 100.0
 const DECAY_PER_SEC := 0.15
@@ -57,6 +59,9 @@ const PETS := {
 		},
 		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
 		"tricks": ["sit", "come", "wave"],
+		"rooms": {
+			"bedroom": "res://Sprites/backgrounds/dog_bedroom.jpg",
+		},
 	},
 	"sheila": {
 		"name": "Sheila",
@@ -69,6 +74,9 @@ const PETS := {
 			"collar_green": {"icon": "res://Sprites/pompom_collars/green.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
 		},
 		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
+		"rooms": {
+			"bedroom": "res://Sprites/backgrounds/dog_bedroom.jpg",
+		},
 		"tricks": ["sit", "come", "wave"],
 	},
 	"kiwi": {
@@ -153,6 +161,7 @@ func do_trick(trick_id: String) -> void:
 	happiness = minf(MAX_STAT, happiness + 10.0)
 	stats_changed.emit()
 	award_sticker("tricks")
+	add_coins(3)
 
 const FRIENDS := {
 	"marigold": {"name": "Princess Marigold", "cutout": "res://Sprites/friend_cutout.png"},
@@ -202,6 +211,7 @@ const STICKERS := {
 	"party": {"emoji": "🎉", "label": "Party Time"},
 	"fish": {"emoji": "🐟", "label": "Fisher"},
 	"tricks": {"emoji": "🎾", "label": "Good Trick!"},
+	"catch": {"emoji": "🍬", "label": "Treat Catcher"},
 }
 var earned_stickers := {}
 
@@ -215,6 +225,22 @@ func award_sticker(id: String) -> void:
 		return
 	earned_stickers[id] = true
 	sticker_earned.emit(id)
+	add_coins(10)
+
+# Treat Coins: a simple, gentle reward currency. Every bit of care earns a
+# few, with a bigger crate every MILESTONE_STEP coins - just a fun "ding!"
+# moment, never anything a 5-year-old could fail to reach.
+const MILESTONE_STEP := 50
+var coins := 0
+
+func add_coins(amount: int) -> void:
+	if amount <= 0:
+		return
+	var before := coins
+	coins += amount
+	coins_changed.emit()
+	if coins / MILESTONE_STEP > before / MILESTONE_STEP:
+		milestone_reached.emit(coins)
 
 func _ready() -> void:
 	_init_pet_records()
@@ -243,6 +269,7 @@ func feed() -> void:
 	happiness = minf(MAX_STAT, happiness + 5.0)
 	stats_changed.emit()
 	award_sticker("feed")
+	add_coins(3)
 
 func play() -> void:
 	happiness = minf(MAX_STAT, happiness + 20.0)
@@ -250,44 +277,52 @@ func play() -> void:
 	cleanliness = maxf(0.0, cleanliness - 5.0)
 	stats_changed.emit()
 	award_sticker("play")
+	add_coins(4)
 
 func pet_her() -> void:
 	happiness = minf(MAX_STAT, happiness + 12.0)
 	stats_changed.emit()
 	award_sticker("pet")
+	add_coins(1)
 
 func pet_friend() -> void:
 	happiness = minf(MAX_STAT, happiness + 8.0)
 	stats_changed.emit()
+	add_coins(1)
 
 func cuddle() -> void:
 	happiness = minf(MAX_STAT, happiness + 18.0)
 	energy = minf(MAX_STAT, energy + 5.0)
 	stats_changed.emit()
 	award_sticker("cuddle")
+	add_coins(3)
 
 func bathe() -> void:
 	cleanliness = minf(MAX_STAT, cleanliness + 30.0)
 	happiness = minf(MAX_STAT, happiness + 5.0)
 	stats_changed.emit()
 	award_sticker("bathe")
+	add_coins(5)
 
 func brush() -> void:
 	cleanliness = minf(MAX_STAT, cleanliness + 15.0)
 	happiness = minf(MAX_STAT, happiness + 10.0)
 	stats_changed.emit()
 	award_sticker("brush")
+	add_coins(4)
 
 func nap() -> void:
 	energy = minf(MAX_STAT, energy + 35.0)
 	stats_changed.emit()
 	award_sticker("nap")
+	add_coins(3)
 
 func stroll() -> void:
 	happiness = minf(MAX_STAT, happiness + 20.0)
 	energy = maxf(0.0, energy - 10.0)
 	stats_changed.emit()
 	award_sticker("stroll")
+	add_coins(4)
 
 func obstacle_course() -> void:
 	happiness = minf(MAX_STAT, happiness + 25.0)
@@ -295,6 +330,7 @@ func obstacle_course() -> void:
 	cleanliness = maxf(0.0, cleanliness - 8.0)
 	stats_changed.emit()
 	award_sticker("obstacle")
+	add_coins(5)
 
 func take_photo(snapshot: Texture2D) -> void:
 	photos.append(snapshot)
@@ -304,21 +340,31 @@ func take_photo(snapshot: Texture2D) -> void:
 	happiness = minf(MAX_STAT, happiness + 10.0)
 	stats_changed.emit()
 	award_sticker("photo")
+	add_coins(3)
 
 func celebrate_party() -> void:
 	happiness = MAX_STAT
 	stats_changed.emit()
 	award_sticker("party")
+	add_coins(6)
 
 func catch_fish() -> void:
 	happiness = minf(MAX_STAT, happiness + 10.0)
 	stats_changed.emit()
 	award_sticker("fish")
+	add_coins(5)
+
+func catch_treat() -> void:
+	happiness = minf(MAX_STAT, happiness + 3.0)
+	stats_changed.emit()
+	award_sticker("catch")
+	add_coins(2)
 
 func invite_friend(id: String) -> void:
 	visiting_friend = id
 	happiness = minf(MAX_STAT, happiness + 20.0)
 	award_sticker("friend")
+	add_coins(4)
 	stats_changed.emit()
 	friend_changed.emit()
 

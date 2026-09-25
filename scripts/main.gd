@@ -2,6 +2,11 @@ extends Control
 
 const Feedback = preload("res://scripts/room_feedback.gd")
 const PetCameo = preload("res://scripts/pet_cameo.gd")
+const Confetti = preload("res://scripts/confetti.gd")
+const Sfx = preload("res://scripts/sfx.gd")
+
+const IDLE_REACTION_SECONDS := 9.0
+const IDLE_REACTIONS := ["😽 blink", "🐾 stretch~", "💤 yawn~", "😊 happy sigh"]
 
 const ROOMS := {
 	"bedroom": preload("res://scenes/rooms/bedroom.tscn"),
@@ -30,6 +35,7 @@ const OWNER_WALK_FRAME_COUNT := 5
 @onready var pets_button: Button = %PetsButton
 @onready var pet_picker: Control = %PetPicker
 @onready var pet_list: HBoxContainer = %PetList
+@onready var coins_label: Label = %CoinsLabel
 
 var current_room: Control = null
 var current_room_id := "bedroom"
@@ -37,6 +43,7 @@ var room_petal: TextureRect = null
 var accessory_nodes := {}
 var static_owner: Texture2D
 var is_playing := false
+var seconds_since_interaction := 0.0
 
 func _ready() -> void:
 	static_owner = load("res://Sprites/owner.png")
@@ -47,7 +54,11 @@ func _ready() -> void:
 	PetalState.play_animation_requested.connect(_play_toy_animation)
 	PetalState.navigate_to_room.connect(_show_room)
 	PetalState.pet_changed.connect(_on_pet_changed)
+	PetalState.coins_changed.connect(_refresh_coins)
+	PetalState.sticker_earned.connect(_on_sticker_earned)
+	PetalState.milestone_reached.connect(_on_milestone_reached)
 	_refresh_stats()
+	_refresh_coins()
 
 	%BedroomButton.pressed.connect(_show_room.bind("bedroom"))
 	%LivingButton.pressed.connect(_show_room.bind("living"))
@@ -63,6 +74,39 @@ func _ready() -> void:
 	%ClosePetPickerButton.pressed.connect(_close_pet_picker)
 
 	_show_room("bedroom")
+
+	var idle_timer := Timer.new()
+	idle_timer.wait_time = 1.0
+	idle_timer.autostart = true
+	idle_timer.timeout.connect(_on_idle_tick)
+	add_child(idle_timer)
+
+func _refresh_coins() -> void:
+	coins_label.text = "🪙 %d Treat Coin%s" % [PetalState.coins, "" if PetalState.coins == 1 else "s"]
+
+func _on_sticker_earned(_id: String) -> void:
+	Sfx.chime(self)
+	if room_petal and is_instance_valid(room_petal):
+		Confetti.burst(current_room, room_petal.global_position + room_petal.size / 2.0, 14)
+
+func _on_milestone_reached(total: int) -> void:
+	Sfx.fanfare(self)
+	var at: Vector2 = room_petal.global_position + room_petal.size / 2.0 if room_petal and is_instance_valid(room_petal) else get_viewport_rect().size / 2.0
+	Confetti.burst(self, at, 30)
+	Feedback.pop(self, "🪙 %d Treat Coins! Yay!" % total, at + Vector2(-60, -60))
+
+# A little life in the room: if nobody has interacted for a while, the
+# pet gives a small cute reaction so the screen never feels frozen.
+# Resets whenever petting happens (see _on_room_pet_input).
+func _on_idle_tick() -> void:
+	seconds_since_interaction += 1.0
+	if seconds_since_interaction < IDLE_REACTION_SECONDS:
+		return
+	seconds_since_interaction = 0.0
+	if not room_petal or not is_instance_valid(room_petal) or is_playing:
+		return
+	_bounce_pet()
+	Feedback.pop(self, IDLE_REACTIONS.pick_random(), room_petal.global_position + Vector2(60, 0))
 
 func _show_room(id: String) -> void:
 	current_room_id = id
@@ -180,7 +224,9 @@ func _on_room_pet_input(event: InputEvent) -> void:
 	var is_click: bool = event is InputEventMouseButton and event.pressed
 	var is_touch: bool = event is InputEventScreenTouch and event.pressed
 	if is_click or is_touch:
+		seconds_since_interaction = 0.0
 		PetalState.pet_her()
+		Sfx.pop(self)
 		Feedback.pop(self, ["🥰 purr~", "💕", "😻"].pick_random(), room_petal.global_position + Vector2(60, 20))
 		_bounce_pet()
 

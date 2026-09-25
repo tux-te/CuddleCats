@@ -118,7 +118,7 @@ func _start_blowdry() -> void:
 	stage = Stage.DRYING
 	suds_bar.visible = false
 	action_button.visible = false
-	background.texture = load(GROOMING_BG)
+	background.texture = load(PetalState.room_bg("grooming", GROOMING_BG))
 	%Title.text = "💨 Blow Dry"
 	petal.texture = load(PetalState.cutout_path())
 	petal.visible = true

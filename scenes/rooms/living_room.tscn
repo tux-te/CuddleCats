@@ -217,3 +217,10 @@ custom_minimum_size = Vector2(160, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "🎾 Tricks"
+
+[node name="TreatCatchButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "🍬 Treat Catch"

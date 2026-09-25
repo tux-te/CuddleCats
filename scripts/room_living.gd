@@ -2,10 +2,24 @@ extends Control
 
 const Feedback = preload("res://scripts/room_feedback.gd")
 const PetCameo = preload("res://scripts/pet_cameo.gd")
+const Confetti = preload("res://scripts/confetti.gd")
+const Sfx = preload("res://scripts/sfx.gd")
+
+const TREAT_EMOJIS := ["🍬", "🍪", "🧁", "🍓", "🍩"]
+const TREAT_GAME_SECONDS := 16.0
+const TREAT_SPAWN_EVERY := 0.85
+const TREAT_FALL_SPEED := 140.0
 
 @onready var background: TextureRect = %Background
 
 var friend_busy := false
+
+var treat_overlay: Control = null
+var treat_score := 0
+var treat_time_left := 0.0
+var treat_spawn_countdown := 0.0
+var treat_game_active := false
+var active_treats: Array[Label] = []
 
 func _ready() -> void:
 	background.texture = load("res://Sprites/backgrounds/living_room.jpg")
@@ -41,6 +55,107 @@ func _ready() -> void:
 	%SitTrickButton.pressed.connect(_on_trick_chosen.bind("sit"))
 	%ComeTrickButton.pressed.connect(_on_trick_chosen.bind("come"))
 	%WaveTrickButton.pressed.connect(_on_trick_chosen.bind("wave"))
+
+	%TreatCatchButton.pressed.connect(_start_treat_catch)
+
+func _process(delta: float) -> void:
+	if not treat_game_active:
+		return
+	treat_time_left -= delta
+	for treat in active_treats.duplicate():
+		if not is_instance_valid(treat):
+			active_treats.erase(treat)
+			continue
+		treat.position.y += TREAT_FALL_SPEED * delta
+		if treat.position.y > size.y:
+			active_treats.erase(treat)
+			treat.queue_free()
+
+	if treat_time_left > 0.0:
+		treat_spawn_countdown -= delta
+		if treat_spawn_countdown <= 0.0:
+			treat_spawn_countdown = TREAT_SPAWN_EVERY
+			_spawn_treat()
+	elif active_treats.is_empty():
+		_finish_treat_catch()
+
+func _start_treat_catch() -> void:
+	if treat_game_active:
+		return
+	treat_game_active = true
+	treat_score = 0
+	treat_time_left = TREAT_GAME_SECONDS
+	treat_spawn_countdown = 0.0
+	active_treats.clear()
+	%TreatCatchButton.disabled = true
+
+	treat_overlay = Control.new()
+	treat_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	treat_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(treat_overlay)
+
+	var title := Label.new()
+	title.text = "🍬 Catch the treats!"
+	title.add_theme_font_size_override("font_size", 24)
+	title.position = Vector2(20, 70)
+	treat_overlay.add_child(title)
+
+	Feedback.pop(self, "🍬 tap the treats before they land!", %TreatCatchButton.global_position + Vector2(0, -20))
+
+func _spawn_treat() -> void:
+	if not is_instance_valid(treat_overlay):
+		return
+	var treat := Label.new()
+	treat.text = TREAT_EMOJIS.pick_random()
+	treat.add_theme_font_size_override("font_size", 40)
+	treat.mouse_filter = Control.MOUSE_FILTER_STOP
+	treat.position = Vector2(randf_range(20.0, maxf(40.0, size.x - 60.0)), -40.0)
+	treat.gui_input.connect(_on_treat_input.bind(treat))
+	treat_overlay.add_child(treat)
+	active_treats.append(treat)
+
+func _on_treat_input(event: InputEvent, treat: Label) -> void:
+	var is_click: bool = event is InputEventMouseButton and event.pressed
+	var is_touch: bool = event is InputEventScreenTouch and event.pressed
+	if not (is_click or is_touch) or not is_instance_valid(treat):
+		return
+	active_treats.erase(treat)
+	treat_score += 1
+	PetalState.catch_treat()
+	Sfx.pop(self)
+	Confetti.burst(treat_overlay, treat.position, 6)
+	Feedback.pop(self, "✨ yum!", treat.position)
+	treat.queue_free()
+
+func _finish_treat_catch() -> void:
+	treat_game_active = false
+	%TreatCatchButton.disabled = false
+	if not is_instance_valid(treat_overlay):
+		return
+
+	var result := Label.new()
+	result.text = "🎉 You caught %d treat%s!" % [treat_score, "" if treat_score == 1 else "s"]
+	result.add_theme_font_size_override("font_size", 26)
+	result.position = Vector2(20, 130)
+	treat_overlay.add_child(result)
+
+	if treat_score >= 5:
+		Sfx.fanfare(self)
+		Confetti.burst(treat_overlay, Vector2(size.x / 2.0, size.y / 2.0), 24)
+
+	var close_button := Button.new()
+	close_button.text = "✅ Done"
+	close_button.custom_minimum_size = Vector2(140, 60)
+	close_button.position = Vector2(20, 180)
+	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	close_button.pressed.connect(_close_treat_catch)
+	treat_overlay.add_child(close_button)
+
+func _close_treat_catch() -> void:
+	if is_instance_valid(treat_overlay):
+		treat_overlay.queue_free()
+	treat_overlay = null
+	active_treats.clear()
 
 func _update_food_icon() -> void:
 	var level := _hunger_level()
