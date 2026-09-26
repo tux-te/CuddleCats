@@ -68,6 +68,14 @@ func _play_bath_comic_inline() -> void:
 	Feedback.pop(self, "🛁 bath time!", %BatheButton.global_position)
 	PetalState.bathe()
 
+	# Lucy (the "Owner" node) is spawned by main.gd as a sibling of %Petal,
+	# standing in the corner beside her - once BrushAnim fills the whole
+	# screen for the comic, she'd otherwise be stuck hidden behind it.
+	var owner: TextureRect = get_node_or_null("Owner")
+	var owner_was_visible := is_instance_valid(owner) and owner.visible
+	if is_instance_valid(owner):
+		owner.visible = false
+
 	var anim: TextureRect = %BrushAnim
 	var orig_anchors := Vector4(anim.anchor_left, anim.anchor_top, anim.anchor_right, anim.anchor_bottom)
 	var orig_offsets := Vector4(anim.offset_left, anim.offset_top, anim.offset_right, anim.offset_bottom)
@@ -100,4 +108,6 @@ func _play_bath_comic_inline() -> void:
 	anim.offset_bottom = orig_offsets.w
 	anim.visible = false
 	%Petal.visible = true
+	if is_instance_valid(owner):
+		owner.visible = owner_was_visible
 	is_bathing = false
