@@ -6,3 +6,5 @@
 
 # Web export output lives in docs/ for GitHub Pages instead
 /build/
+dev/pixellab_key.txt
+dev/gemini_key.txt
