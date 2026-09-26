@@ -116,6 +116,7 @@ const PETS := {
 		# A little illustrated comic of Lucy brushing her, shown instead of
 		# the generic disembodied-hand brush animation (see room_grooming.gd).
 		"brush": {"path": "res://Sprites/kiwi_brush/frame_%02d.png", "count": 8},
+		"bath_comic": {"path": "res://Sprites/kiwi_bath_comic/frame_%02d.png", "count": 8},
 		"accessories": {},
 		"exclusive_groups": [],
 		"rooms": {
