@@ -114,49 +114,7 @@ func _finish_scrub() -> void:
 func _do_rinse() -> void:
 	PetalState.bathe()
 	Feedback.pop(self, SCENTS[chosen_scent], action_button.global_position)
-	if PetalState.has_anim("bath_comic"):
-		await _play_bath_comic()
 	_start_blowdry()
-
-# A pet-specific illustrated bath sequence (e.g. Pompom's comic of Lucy
-# bathing her), shown in place of the interactive tub once she's rinsed -
-# mirrors room_grooming.gd's brush comic. Petal normally sits in a small
-# corner box (see the scene file), which is fine for showing just her
-# cutout, but the background art has a whole cat baked into the tub - so
-# for the comic we blow petal up to fill the screen and cover it, then put
-# her back in her corner box before the blow-dry stage.
-func _play_bath_comic() -> void:
-	var orig_anchors := Vector4(petal.anchor_left, petal.anchor_top, petal.anchor_right, petal.anchor_bottom)
-	var orig_offsets := Vector4(petal.offset_left, petal.offset_top, petal.offset_right, petal.offset_bottom)
-	var orig_grow_v := petal.grow_vertical
-
-	petal.anchor_left = 0.0
-	petal.anchor_top = 0.0
-	petal.anchor_right = 1.0
-	petal.anchor_bottom = 1.0
-	petal.offset_left = 0.0
-	petal.offset_top = 0.0
-	petal.offset_right = 0.0
-	petal.offset_bottom = 0.0
-	petal.grow_vertical = 1
-	petal.visible = true
-
-	var frames := PetalState.anim_frames("bath_comic")
-	for frame in frames:
-		if not is_instance_valid(self):
-			return
-		petal.texture = frame
-		await get_tree().create_timer(0.9).timeout
-
-	petal.anchor_left = orig_anchors.x
-	petal.anchor_top = orig_anchors.y
-	petal.anchor_right = orig_anchors.z
-	petal.anchor_bottom = orig_anchors.w
-	petal.offset_left = orig_offsets.x
-	petal.offset_top = orig_offsets.y
-	petal.offset_right = orig_offsets.z
-	petal.offset_bottom = orig_offsets.w
-	petal.grow_vertical = orig_grow_v
 
 func _start_blowdry() -> void:
 	stage = Stage.DRYING
