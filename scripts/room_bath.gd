@@ -114,7 +114,21 @@ func _finish_scrub() -> void:
 func _do_rinse() -> void:
 	PetalState.bathe()
 	Feedback.pop(self, SCENTS[chosen_scent], action_button.global_position)
+	if PetalState.has_anim("bath_comic"):
+		await _play_bath_comic()
 	_start_blowdry()
+
+# A pet-specific illustrated bath sequence (e.g. Pompom's comic of Lucy
+# bathing her), shown in place of the interactive tub once she's rinsed -
+# mirrors room_grooming.gd's brush comic.
+func _play_bath_comic() -> void:
+	petal.visible = true
+	var frames := PetalState.anim_frames("bath_comic")
+	for frame in frames:
+		if not is_instance_valid(self):
+			return
+		petal.texture = frame
+		await get_tree().create_timer(0.9).timeout
 
 func _start_blowdry() -> void:
 	stage = Stage.DRYING

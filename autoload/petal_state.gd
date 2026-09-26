@@ -57,6 +57,8 @@ const PETS := {
 		"trick_wave": {"path": "res://Sprites/pompom_wave_trick/frame_%02d.png", "count": 6},
 		"brush": {"path": "res://Sprites/pompom_brush/frame_%02d.png", "count": 10},
 		"dance": {"path": "res://Sprites/pompom_dance/frame_%02d.png", "count": 12},
+		"swim": {"path": "res://Sprites/pompom_swim/frame_%02d.png", "count": 16},
+		"bath_comic": {"path": "res://Sprites/pompom_bath_comic/frame_%02d.png", "count": 14},
 		"wave": "res://Sprites/pompom_wave.png",
 		"sleep_still": "res://Sprites/pompom_sleep_pose.png",
 		"come_still": "res://Sprites/pompom_come_pose.png",
