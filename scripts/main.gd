@@ -47,6 +47,7 @@ const LUCY_OWNER_PETS := ["pompom", "sheila", "kiwi"]
 var current_room: Control = null
 var current_room_id := "bedroom"
 var room_petal: TextureRect = null
+var room_owner: TextureRect = null
 var accessory_nodes := {}
 var is_playing := false
 var seconds_since_interaction := 0.0
@@ -119,6 +120,7 @@ func _show_room(id: String) -> void:
 	if current_room:
 		current_room.queue_free()
 	room_petal = null
+	room_owner = null
 	accessory_nodes.clear()
 	current_room = ROOMS[id].instantiate()
 	room_slot.add_child(current_room)
@@ -201,6 +203,7 @@ func _spawn_owner_beside(petal_node: TextureRect) -> void:
 	# Keep the owner drawn behind the cat, since her walk-in path
 	# crosses through Petal's box and would otherwise cover her.
 	petal_node.get_parent().move_child(owner_node, petal_node.get_index())
+	room_owner = owner_node
 	_walk_in_owner(owner_node)
 
 func _owner_texture_path() -> String:
@@ -284,6 +287,12 @@ func _play_named_animation(anim_key: String, still_key: String) -> void:
 		room_petal.offset_right = 0.0
 		room_petal.offset_bottom = 0.0
 		room_petal.grow_vertical = 1
+		# Lucy normally stands tucked in behind the pet's corner box - once
+		# that box covers the whole screen she'd otherwise be hidden behind
+		# it for the whole animation, so just step her out until it's done.
+		var owner_was_visible := is_instance_valid(room_owner) and room_owner.visible
+		if is_instance_valid(room_owner):
+			room_owner.visible = false
 
 		var frames := PetalState.anim_frames(anim_key)
 		for i in range(frames.size()):
@@ -306,6 +315,8 @@ func _play_named_animation(anim_key: String, still_key: String) -> void:
 			room_petal.grow_vertical = orig_grow_v
 			room_petal.texture = load(PetalState.cutout_path())
 			_refresh_accessories()
+		if is_instance_valid(room_owner):
+			room_owner.visible = owner_was_visible
 		return
 
 	if still_key != "" and PetalState.has_anim(still_key):
