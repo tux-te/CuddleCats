@@ -6,7 +6,6 @@ const Confetti = preload("res://scripts/confetti.gd")
 const Sfx = preload("res://scripts/sfx.gd")
 
 const IDLE_REACTION_SECONDS := 9.0
-const IDLE_REACTIONS := ["😽 blink", "🐾 stretch~", "💤 yawn~", "😊 happy sigh"]
 
 const ROOMS := {
 	"bedroom": preload("res://scenes/rooms/bedroom.tscn"),
@@ -113,7 +112,7 @@ func _on_idle_tick() -> void:
 	if not room_petal or not is_instance_valid(room_petal) or is_playing:
 		return
 	_bounce_pet()
-	Feedback.pop(self, IDLE_REACTIONS.pick_random(), room_petal.global_position + Vector2(60, 0))
+	Feedback.pop(self, PetalState.idle_reactions().pick_random(), room_petal.global_position + Vector2(60, 0))
 
 func _show_room(id: String) -> void:
 	current_room_id = id
@@ -244,7 +243,7 @@ func _on_room_pet_input(event: InputEvent) -> void:
 		seconds_since_interaction = 0.0
 		PetalState.pet_her()
 		Sfx.pop(self)
-		Feedback.pop(self, ["🥰 purr~", "💕", "😻"].pick_random(), room_petal.global_position + Vector2(60, 20))
+		Feedback.pop(self, PetalState.pet_reactions().pick_random(), room_petal.global_position + Vector2(60, 20))
 		_bounce_pet()
 
 func _bounce_pet() -> void:

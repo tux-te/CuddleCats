@@ -262,7 +262,7 @@ func _on_friend_input(event: InputEvent) -> void:
 	var is_touch: bool = event is InputEventScreenTouch and event.pressed
 	if is_click or is_touch:
 		PetalState.pet_friend()
-		Feedback.pop(self, ["💕", "🥰 purr~", "😻"].pick_random(), %Friend.global_position + Vector2(60, 20))
+		Feedback.pop(self, PetalState.friend_reactions(PetalState.visiting_friend).pick_random(), %Friend.global_position + Vector2(60, 20))
 		_bounce_friend()
 
 func _bounce_friend() -> void:

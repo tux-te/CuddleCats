@@ -29,6 +29,7 @@ const DECAY_PER_SEC := 0.15
 const PETS := {
 	"petal": {
 		"name": "Princess Petal",
+		"species": "cat",
 		"cutout": "res://Sprites/petal_cutout.png",
 		"walk": {"path": "res://Sprites/petal_walk/frame_%02d.png", "count": 10},
 		"jump": {"path": "res://Sprites/petal_jump/frame_%02d.png", "count": 5},
@@ -49,6 +50,7 @@ const PETS := {
 	},
 	"pompom": {
 		"name": "Pompom",
+		"species": "dog",
 		"cutout": "res://Sprites/pompom_cutout.png",
 		"walk": {"path": "res://Sprites/pompom_walk/frame_%02d.png", "count": 11},
 		"jump": {"path": "res://Sprites/pompom_jump/frame_%02d.png", "count": 7},
@@ -76,6 +78,7 @@ const PETS := {
 	},
 	"sheila": {
 		"name": "Sheila",
+		"species": "dog",
 		"cutout": "res://Sprites/sheila_cutout.png",
 		# Sheila shares Pompom's dog-themed rooms and collar wardrobe, but has
 		# her own full set of frame animations (and a bath background just
@@ -104,6 +107,7 @@ const PETS := {
 	},
 	"kiwi": {
 		"name": "Kiwi",
+		"species": "bird",
 		"cutout": "res://Sprites/kiwi_cutout.png",
 		# Kiwi flies in instead of walking, and has a single flying hero
 		# pose she strikes for Jump for Joy (no frames needed - see
@@ -171,6 +175,32 @@ func anim_frames(kind: String) -> Array[Texture2D]:
 func cutout_path() -> String:
 	return String(PETS[active_pet]["cutout"])
 
+# Petting reactions, by species - dogs shouldn't purr and meow like a cat.
+const SPECIES_REACTIONS := {
+	"cat": ["🥰 purr~", "💕", "😻"],
+	"dog": ["🐾 yip!", "💕", "🐶 woof!"],
+	"bird": ["🐦 tweet!", "💕", "🎶 chirp!"],
+}
+
+func pet_reactions() -> Array:
+	var species := String(PETS[active_pet].get("species", "cat"))
+	return SPECIES_REACTIONS.get(species, SPECIES_REACTIONS["cat"])
+
+func friend_reactions(id: String) -> Array:
+	var species := String(FRIENDS[id].get("species", "cat"))
+	return SPECIES_REACTIONS.get(species, SPECIES_REACTIONS["cat"])
+
+const SPECIES_IDLE_BLINK := {
+	"cat": "😽 blink",
+	"dog": "🐶 blink",
+	"bird": "🐦 blink",
+}
+
+func idle_reactions() -> Array:
+	var species := String(PETS[active_pet].get("species", "cat"))
+	var blink: String = SPECIES_IDLE_BLINK.get(species, SPECIES_IDLE_BLINK["cat"])
+	return [blink, "🐾 stretch~", "💤 yawn~", "😊 happy sigh"]
+
 func static_pose(key: String) -> String:
 	return String(PETS[active_pet].get(key, PETS[active_pet]["cutout"]))
 
@@ -202,13 +232,13 @@ func do_trick(trick_id: String) -> void:
 	add_coins(3)
 
 const FRIENDS := {
-	"marigold": {"name": "Princess Marigold", "cutout": "res://Sprites/friend_cutout.png"},
-	"blossom": {"name": "Princess Blossom", "cutout": "res://Sprites/friend_blossom.png"},
-	"iris": {"name": "Princess Iris", "cutout": "res://Sprites/friend_iris.png"},
-	"lily": {"name": "Princess Lily", "cutout": "res://Sprites/friend_lily.png"},
-	"biscuit": {"name": "Biscuit", "cutout": "res://Sprites/friend_biscuit.png"},
-	"coco": {"name": "Coco", "cutout": "res://Sprites/friend_coco.png"},
-	"raspberry": {"name": "Raspberry", "cutout": "res://Sprites/friend_raspberry.png"},
+	"marigold": {"name": "Princess Marigold", "species": "cat", "cutout": "res://Sprites/friend_cutout.png"},
+	"blossom": {"name": "Princess Blossom", "species": "cat", "cutout": "res://Sprites/friend_blossom.png"},
+	"iris": {"name": "Princess Iris", "species": "cat", "cutout": "res://Sprites/friend_iris.png"},
+	"lily": {"name": "Princess Lily", "species": "cat", "cutout": "res://Sprites/friend_lily.png"},
+	"biscuit": {"name": "Biscuit", "species": "dog", "cutout": "res://Sprites/friend_biscuit.png"},
+	"coco": {"name": "Coco", "species": "dog", "cutout": "res://Sprites/friend_coco.png"},
+	"raspberry": {"name": "Raspberry", "species": "bird", "cutout": "res://Sprites/friend_raspberry.png"},
 }
 const DEFAULT_FRIEND_OPTIONS: Array[String] = ["marigold", "blossom", "iris", "lily"]
 var visiting_friend := ""
