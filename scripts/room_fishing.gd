@@ -22,9 +22,12 @@ enum FishState { IDLE, WAITING, BITING, SHOWING, READY_TO_RELEASE }
 @onready var fish_display: Label = %FishDisplay
 @onready var rod_sprite: TextureRect = %RodSprite
 @onready var back_button: Button = %BackButton
+@onready var swim_button: Button = %SwimButton
+@onready var swim_sprite: TextureRect = %SwimSprite
 
 var rod_frames: Array[Texture2D] = []
 var fish_state: FishState = FishState.IDLE
+var is_swimming := false
 
 func _ready() -> void:
 	for i in range(10):
@@ -34,8 +37,37 @@ func _ready() -> void:
 	fish_button.pressed.connect(_on_fish)
 	back_button.pressed.connect(_on_back)
 
+	swim_button.visible = PetalState.has_anim("swim")
+	swim_button.pressed.connect(_on_swim)
+
 func _on_back() -> void:
 	PetalState.navigate_to_room.emit("garden")
+
+func _on_swim() -> void:
+	if is_swimming or not PetalState.has_anim("swim"):
+		return
+	is_swimming = true
+	swim_button.disabled = true
+	Feedback.pop(self, "🏊 splash!", swim_button.global_position)
+
+	# She swims out in the lake itself, not on the bank where she normally
+	# stands - swap in a sprite positioned over the water for the dip.
+	%Petal.visible = false
+	swim_sprite.visible = true
+	var frames := PetalState.anim_frames("swim")
+	for frame in frames:
+		if not is_instance_valid(self):
+			return
+		swim_sprite.texture = frame
+		await get_tree().create_timer(0.35).timeout
+	if not is_instance_valid(self):
+		return
+	swim_sprite.visible = false
+	%Petal.visible = true
+	PetalState.go_swimming()
+	PetCameo.jump_for_joy(%Petal)
+	swim_button.disabled = false
+	is_swimming = false
 
 func _on_fish() -> void:
 	match fish_state:

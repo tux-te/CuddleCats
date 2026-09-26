@@ -16,9 +16,13 @@ Sprites/kiwi_walk, Sprites/sheila_walk, etc.). Runs remove_white_bg.py
 automatically on each saved frame as a safety net (a no-op if the frame is
 already fully transparent, since no_background=true is always passed).
 
-Note: the [frames] arg is NOT sent to the API — this endpoint decides frame
-count itself based on the action description, it isn't configurable. The
-arg is accepted for logging/expectation-setting only.
+Note: the [frames] arg is NOT sent to the API — confirmed against PixelLab's
+OpenAPI schema, this endpoint has no frame-count field. Frame count is
+fixed by output `size` instead:
+    32x32 or 64x64   -> 16 frames
+    128x128, 170x170, 256x256 -> 4 frames
+Pick a smaller `size` if you want a smoother multi-frame cycle; the [frames]
+arg is accepted here for logging only and has no effect on the request.
 
 API key: reads dev/pixellab_key.txt (one line, no quotes). Get one at
 https://www.pixellab.ai/account

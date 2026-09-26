@@ -25,6 +25,13 @@ const ROOMS := {
 
 const OWNER_WALK_FRAME_COUNT := 5
 
+# Princess Petal's owner is the "classic" girl with her own walk cycle.
+# The other pets belong to Lucy, who only has a single standing portrait
+# so far - she still slides in beside them, just without frame-by-frame
+# walking (same fallback style used elsewhere for pets with no walk art).
+const LUCY_OWNER := "res://Sprites/lucy_cutout.png"
+const LUCY_OWNER_PETS := ["pompom", "sheila", "kiwi"]
+
 @onready var room_slot: Control = %RoomSlot
 @onready var name_label: Label = %NameLabel
 @onready var mood_label: Label = %MoodLabel
@@ -41,17 +48,16 @@ var current_room: Control = null
 var current_room_id := "bedroom"
 var room_petal: TextureRect = null
 var accessory_nodes := {}
-var static_owner: Texture2D
 var is_playing := false
 var seconds_since_interaction := 0.0
 
 func _ready() -> void:
-	static_owner = load("res://Sprites/owner.png")
 	name_label.text = PetalState.pet_name
 
 	PetalState.stats_changed.connect(_refresh_stats)
 	PetalState.accessories_changed.connect(_refresh_accessories)
 	PetalState.play_animation_requested.connect(_play_toy_animation)
+	PetalState.bell_animation_requested.connect(_play_bell_animation)
 	PetalState.navigate_to_room.connect(_show_room)
 	PetalState.pet_changed.connect(_on_pet_changed)
 	PetalState.coins_changed.connect(_refresh_coins)
@@ -197,11 +203,18 @@ func _spawn_owner_beside(petal_node: TextureRect) -> void:
 	petal_node.get_parent().move_child(owner_node, petal_node.get_index())
 	_walk_in_owner(owner_node)
 
-func _walk_in_owner(owner_node: TextureRect) -> void:
-	var walk_frames: Array[Texture2D] = []
-	for i in range(OWNER_WALK_FRAME_COUNT):
-		walk_frames.append(load("res://Sprites/owner_walk/frame_%02d.png" % i))
+func _owner_texture_path() -> String:
+	return LUCY_OWNER if LUCY_OWNER_PETS.has(PetalState.active_pet) else "res://Sprites/owner.png"
 
+func _walk_in_owner(owner_node: TextureRect) -> void:
+	var use_lucy := LUCY_OWNER_PETS.has(PetalState.active_pet)
+	var owner_texture: Texture2D = load(_owner_texture_path())
+	var walk_frames: Array[Texture2D] = []
+	if not use_lucy:
+		for i in range(OWNER_WALK_FRAME_COUNT):
+			walk_frames.append(load("res://Sprites/owner_walk/frame_%02d.png" % i))
+
+	owner_node.texture = owner_texture
 	owner_node.pivot_offset = owner_node.size / 2.0
 	var target_x := owner_node.position.x
 	var start_x := target_x - 140.0
@@ -211,13 +224,14 @@ func _walk_in_owner(owner_node: TextureRect) -> void:
 	for i in range(steps):
 		if not is_instance_valid(owner_node):
 			return
-		owner_node.texture = walk_frames[i % walk_frames.size()]
+		if not walk_frames.is_empty():
+			owner_node.texture = walk_frames[i % walk_frames.size()]
 		owner_node.position.x = lerp(start_x, target_x, float(i + 1) / float(steps))
 		await get_tree().create_timer(0.06).timeout
 
 	if not is_instance_valid(owner_node):
 		return
-	owner_node.texture = static_owner
+	owner_node.texture = owner_texture
 	owner_node.position.x = target_x
 
 func _on_room_pet_input(event: InputEvent) -> void:
@@ -237,30 +251,49 @@ func _bounce_pet() -> void:
 	tween.tween_property(room_petal, "scale", Vector2(1.0, 1.0), 0.18).set_trans(Tween.TRANS_ELASTIC)
 
 func _play_toy_animation() -> void:
+	await _play_named_animation("play", "play_still")
+
+func _play_bell_animation() -> void:
+	await _play_named_animation("toy_bell", "")
+
+# Plays a pet's named frame-set (if she has one), else shows a single
+# still pose with a happy bounce (if she has one, e.g. Kiwi's "play_still"
+# portrait with Lucy), else just falls back to a generic Jump for Joy.
+func _play_named_animation(anim_key: String, still_key: String) -> void:
 	if not room_petal or is_playing:
 		return
 	is_playing = true
 	for id in accessory_nodes:
 		accessory_nodes[id].visible = false
 
-	if not PetalState.has_anim("play"):
-		await PetCameo.jump_for_joy(room_petal)
+	if PetalState.has_anim(anim_key):
+		var frames := PetalState.anim_frames(anim_key)
+		for i in range(frames.size()):
+			if not is_instance_valid(room_petal):
+				is_playing = false
+				return
+			room_petal.texture = frames[i]
+			var last := i == frames.size() - 1
+			await get_tree().create_timer(0.7 if last else 0.18).timeout
 		is_playing = false
 		if is_instance_valid(room_petal):
+			room_petal.texture = load(PetalState.cutout_path())
 			_refresh_accessories()
 		return
 
-	var frames := PetalState.anim_frames("play")
-	for i in range(frames.size()):
-		if not is_instance_valid(room_petal):
-			is_playing = false
-			return
-		room_petal.texture = frames[i]
-		var last := i == frames.size() - 1
-		await get_tree().create_timer(0.7 if last else 0.18).timeout
+	if still_key != "" and PetalState.has_anim(still_key):
+		room_petal.texture = load(PetalState.static_pose(still_key))
+		_bounce_pet()
+		await get_tree().create_timer(0.9).timeout
+		is_playing = false
+		if is_instance_valid(room_petal):
+			room_petal.texture = load(PetalState.cutout_path())
+			_refresh_accessories()
+		return
+
+	await PetCameo.jump_for_joy(room_petal)
 	is_playing = false
 	if is_instance_valid(room_petal):
-		room_petal.texture = load(PetalState.cutout_path())
 		_refresh_accessories()
 
 func _refresh_stats() -> void:

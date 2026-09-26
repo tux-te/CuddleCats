@@ -25,11 +25,23 @@ func _play_brush_anim() -> void:
 	is_brushing = true
 	%Petal.visible = false
 	%BrushAnim.visible = true
-	for i in range(BRUSH_FRAME_COUNT):
-		%BrushAnim.texture = load("res://Sprites/owner_brush/frame_%02d.png" % i)
-		await get_tree().create_timer(0.25).timeout
-		if not is_instance_valid(self):
-			return
+
+	if PetalState.has_anim("brush"):
+		# A pet-specific illustrated sequence (e.g. Kiwi's comic of Lucy
+		# brushing her) - slower per frame so there's time to read it.
+		var frames := PetalState.anim_frames("brush")
+		for frame in frames:
+			%BrushAnim.texture = frame
+			await get_tree().create_timer(0.9).timeout
+			if not is_instance_valid(self):
+				return
+	else:
+		for i in range(BRUSH_FRAME_COUNT):
+			%BrushAnim.texture = load("res://Sprites/owner_brush/frame_%02d.png" % i)
+			await get_tree().create_timer(0.25).timeout
+			if not is_instance_valid(self):
+				return
+
 	await get_tree().create_timer(0.5).timeout
 	if not is_instance_valid(self):
 		return

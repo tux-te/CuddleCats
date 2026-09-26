@@ -15,6 +15,7 @@ const DRY_PER_SECOND := 45.0
 const DRYER_IDLE := "res://Sprites/blowdryer_idle.png"
 const DRYER_BLOWING := "res://Sprites/blowdryer_blowing.png"
 const GROOMING_BG := "res://Sprites/backgrounds/grooming_room.jpg"
+const BATH_BG := "res://Sprites/backgrounds/bath_room.jpg"
 
 enum Stage { IDLE, PICKING_SCENT, SCRUBBING, READY_TO_RINSE, DRYING, READY_TO_FINISH, DONE }
 
@@ -34,6 +35,7 @@ var last_scrub_pos := Vector2.ZERO
 var is_drying_held := false
 
 func _ready() -> void:
+	background.texture = load(PetalState.room_bg("bath", BATH_BG))
 	%BackButton.pressed.connect(_on_back)
 	action_button.pressed.connect(_on_action)
 	%RoseButton.pressed.connect(_on_scent_chosen.bind("rose"))

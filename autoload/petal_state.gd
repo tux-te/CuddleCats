@@ -7,6 +7,7 @@ extends Node
 signal stats_changed
 signal accessories_changed
 signal play_animation_requested
+signal bell_animation_requested
 signal friend_changed
 signal sticker_earned
 signal navigate_to_room(room_id: String)
@@ -49,24 +50,41 @@ const PETS := {
 	"pompom": {
 		"name": "Pompom",
 		"cutout": "res://Sprites/pompom_cutout.png",
+		"walk": {"path": "res://Sprites/pompom_walk/frame_%02d.png", "count": 11},
+		"jump": {"path": "res://Sprites/pompom_jump/frame_%02d.png", "count": 7},
+		"sleep": {"path": "res://Sprites/pompom_sleep/frame_%02d.png", "count": 10},
+		"trick_come": {"path": "res://Sprites/pompom_come_trick/frame_%02d.png", "count": 9},
+		"trick_wave": {"path": "res://Sprites/pompom_wave_trick/frame_%02d.png", "count": 6},
+		"brush": {"path": "res://Sprites/pompom_brush/frame_%02d.png", "count": 10},
+		"dance": {"path": "res://Sprites/pompom_dance/frame_%02d.png", "count": 12},
 		"wave": "res://Sprites/pompom_wave.png",
 		"sleep_still": "res://Sprites/pompom_sleep_pose.png",
+		"come_still": "res://Sprites/pompom_come_pose.png",
 		"accessories": {
-			"collar_pink": {"icon": "res://Sprites/pompom_collars/pink.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
-			"collar_lavender": {"icon": "res://Sprites/pompom_collars/lavender.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
-			"collar_blue": {"icon": "res://Sprites/pompom_collars/blue.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
-			"collar_green": {"icon": "res://Sprites/pompom_collars/green.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
+			"blush": {"icon": "res://Sprites/blush.png", "anchor": {"l": 0.03, "t": 0.28, "r": 0.50, "b": 0.52}},
+			"mascara": {"icon": "res://Sprites/mascara.png", "anchor": {"l": 0.06, "t": 0.26, "r": 0.40, "b": 0.38}},
+			"lipstick": {"icon": "res://Sprites/lipstick.png", "anchor": {"l": 0.12, "t": 0.42, "r": 0.35, "b": 0.53}},
 		},
-		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
+		"exclusive_groups": [],
 		"tricks": ["sit", "come", "wave"],
 		"rooms": {
-			"bedroom": "res://Sprites/backgrounds/dog_bedroom.jpg",
+			"bedroom": "res://Sprites/backgrounds/pompom_bedroom.jpg",
 		},
 	},
 	"sheila": {
 		"name": "Sheila",
 		"cutout": "res://Sprites/sheila_cutout.png",
-		# Sheila shares Pompom's dog-themed rooms and collar wardrobe.
+		# Sheila shares Pompom's dog-themed rooms and collar wardrobe, but has
+		# her own full set of frame animations (and a bath background just
+		# for her - the tub art was drawn with her specifically in it).
+		"walk": {"path": "res://Sprites/sheila_walk/frame_%02d.png", "count": 7},
+		"jump": {"path": "res://Sprites/sheila_jump/frame_%02d.png", "count": 5},
+		"sleep": {"path": "res://Sprites/sheila_sleep/frame_%02d.png", "count": 6},
+		"dance": {"path": "res://Sprites/sheila_dance/frame_%02d.png", "count": 9},
+		"trick_sit": {"path": "res://Sprites/sheila_sit_trick/frame_%02d.png", "count": 5},
+		"trick_wave": {"path": "res://Sprites/sheila_wave_trick/frame_%02d.png", "count": 7},
+		"swim": {"path": "res://Sprites/sheila_swim/frame_%02d.png", "count": 16},
+		"brush": {"path": "res://Sprites/sheila_brush/frame_%02d.png", "count": 5},
 		"accessories": {
 			"collar_pink": {"icon": "res://Sprites/pompom_collars/pink.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
 			"collar_lavender": {"icon": "res://Sprites/pompom_collars/lavender.png", "anchor": {"l": 0.15, "t": 0.56, "r": 0.85, "b": 0.82}},
@@ -75,19 +93,32 @@ const PETS := {
 		},
 		"exclusive_groups": [["collar_pink", "collar_lavender", "collar_blue", "collar_green"]],
 		"rooms": {
-			"bedroom": "res://Sprites/backgrounds/dog_bedroom.jpg",
+			"bedroom": "res://Sprites/backgrounds/pompom_bedroom.jpg",
+			"bath": "res://Sprites/backgrounds/sheila_bath.jpg",
 		},
 		"tricks": ["sit", "come", "wave"],
 	},
 	"kiwi": {
 		"name": "Kiwi",
 		"cutout": "res://Sprites/kiwi_cutout.png",
+		# Kiwi flies in instead of walking, and has a single flying hero
+		# pose she strikes for Jump for Joy (no frames needed - see
+		# PetCameo._bounce_tween, which checks for "jump_still").
+		"walk": {"path": "res://Sprites/kiwi_walk/frame_%02d.png", "count": 5},
+		"jump_still": "res://Sprites/kiwi_jump_pose.png",
+		"trick_sing": {"path": "res://Sprites/kiwi_sing_trick/frame_%02d.png", "count": 6},
+		"toy_bell": {"path": "res://Sprites/kiwi_bell_toy/frame_%02d.png", "count": 6},
+		"play_still": "res://Sprites/lucy_and_kiwi.png",
+		# A little illustrated comic of Lucy brushing her, shown instead of
+		# the generic disembodied-hand brush animation (see room_grooming.gd).
+		"brush": {"path": "res://Sprites/kiwi_brush/frame_%02d.png", "count": 8},
 		"accessories": {},
 		"exclusive_groups": [],
 		"rooms": {
 			"grooming": "res://Sprites/backgrounds/bird_grooming.jpg",
 			"dressup": "res://Sprites/backgrounds/bird_dressup.jpg",
 		},
+		"tricks": ["sing"],
 	},
 }
 
@@ -147,6 +178,7 @@ const TRICK_INFO := {
 	"sit": {"label": "Sit", "emoji": "🐾"},
 	"come": {"label": "Come", "emoji": "👋"},
 	"wave": {"label": "Wave", "emoji": "🖐️"},
+	"sing": {"label": "Sing", "emoji": "🎵"},
 }
 
 func has_tricks() -> bool:
@@ -212,6 +244,8 @@ const STICKERS := {
 	"fish": {"emoji": "🐟", "label": "Fisher"},
 	"tricks": {"emoji": "🎾", "label": "Good Trick!"},
 	"catch": {"emoji": "🍬", "label": "Treat Catcher"},
+	"bell": {"emoji": "🔔", "label": "Jingle Bells"},
+	"swim": {"emoji": "🏊", "label": "Splash Time"},
 }
 var earned_stickers := {}
 
@@ -359,6 +393,23 @@ func catch_treat() -> void:
 	stats_changed.emit()
 	award_sticker("catch")
 	add_coins(2)
+
+func has_bell_toy() -> bool:
+	return PETS[active_pet].has("toy_bell")
+
+func go_swimming() -> void:
+	happiness = minf(MAX_STAT, happiness + 20.0)
+	cleanliness = maxf(0.0, cleanliness - 10.0)
+	stats_changed.emit()
+	award_sticker("swim")
+	add_coins(5)
+
+func ring_bell() -> void:
+	happiness = minf(MAX_STAT, happiness + 15.0)
+	stats_changed.emit()
+	award_sticker("bell")
+	add_coins(3)
+	bell_animation_requested.emit()
 
 func invite_friend(id: String) -> void:
 	visiting_friend = id

@@ -157,6 +157,13 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "🖐️ Wave"
 
+[node name="SingTrickButton" type="Button" parent="TrickPicker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🎵 Sing"
+
 [node name="FoodBowl" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
@@ -224,3 +231,11 @@ custom_minimum_size = Vector2(160, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "🍬 Treat Catch"
+
+[node name="BellButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(160, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🔔 Ring Bell"

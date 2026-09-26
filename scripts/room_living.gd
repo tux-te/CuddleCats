@@ -52,11 +52,19 @@ func _ready() -> void:
 
 	%TricksButton.visible = PetalState.has_tricks()
 	%TricksButton.pressed.connect(_on_tricks_pressed)
+	%SitTrickButton.visible = PetalState.tricks().has("sit")
 	%SitTrickButton.pressed.connect(_on_trick_chosen.bind("sit"))
+	%ComeTrickButton.visible = PetalState.tricks().has("come")
 	%ComeTrickButton.pressed.connect(_on_trick_chosen.bind("come"))
+	%WaveTrickButton.visible = PetalState.tricks().has("wave")
 	%WaveTrickButton.pressed.connect(_on_trick_chosen.bind("wave"))
+	%SingTrickButton.visible = PetalState.tricks().has("sing")
+	%SingTrickButton.pressed.connect(_on_trick_chosen.bind("sing"))
 
 	%TreatCatchButton.pressed.connect(_start_treat_catch)
+
+	%BellButton.visible = PetalState.has_bell_toy()
+	%BellButton.pressed.connect(_on_bell)
 
 func _process(delta: float) -> void:
 	if not treat_game_active:
@@ -186,6 +194,10 @@ func _on_play() -> void:
 	Feedback.pop(self, "🎉 wheee!", %PlayButton.global_position)
 	if PetalState.visiting_friend != "":
 		_play_with_friend()
+
+func _on_bell() -> void:
+	PetalState.ring_bell()
+	Feedback.pop(self, "🔔 jingle jingle!", %BellButton.global_position)
 
 func _on_invite() -> void:
 	if PetalState.visiting_friend != "":
