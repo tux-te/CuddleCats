@@ -267,6 +267,24 @@ func _play_named_animation(anim_key: String, still_key: String) -> void:
 		accessory_nodes[id].visible = false
 
 	if PetalState.has_anim(anim_key):
+		# room_petal normally sits in a small corner box (see e.g.
+		# living_room.tscn) that's easy for background furniture to crowd
+		# or partly cover - blow her up to fill the screen for the
+		# animation itself, same trick used for the bath comic, then put
+		# her back in her corner box afterward.
+		var orig_anchors := Vector4(room_petal.anchor_left, room_petal.anchor_top, room_petal.anchor_right, room_petal.anchor_bottom)
+		var orig_offsets := Vector4(room_petal.offset_left, room_petal.offset_top, room_petal.offset_right, room_petal.offset_bottom)
+		var orig_grow_v := room_petal.grow_vertical
+		room_petal.anchor_left = 0.0
+		room_petal.anchor_top = 0.0
+		room_petal.anchor_right = 1.0
+		room_petal.anchor_bottom = 1.0
+		room_petal.offset_left = 0.0
+		room_petal.offset_top = 0.0
+		room_petal.offset_right = 0.0
+		room_petal.offset_bottom = 0.0
+		room_petal.grow_vertical = 1
+
 		var frames := PetalState.anim_frames(anim_key)
 		for i in range(frames.size()):
 			if not is_instance_valid(room_petal):
@@ -274,9 +292,18 @@ func _play_named_animation(anim_key: String, still_key: String) -> void:
 				return
 			room_petal.texture = frames[i]
 			var last := i == frames.size() - 1
-			await get_tree().create_timer(0.7 if last else 0.18).timeout
+			await get_tree().create_timer(1.1 if last else 0.35).timeout
 		is_playing = false
 		if is_instance_valid(room_petal):
+			room_petal.anchor_left = orig_anchors.x
+			room_petal.anchor_top = orig_anchors.y
+			room_petal.anchor_right = orig_anchors.z
+			room_petal.anchor_bottom = orig_anchors.w
+			room_petal.offset_left = orig_offsets.x
+			room_petal.offset_top = orig_offsets.y
+			room_petal.offset_right = orig_offsets.z
+			room_petal.offset_bottom = orig_offsets.w
+			room_petal.grow_vertical = orig_grow_v
 			room_petal.texture = load(PetalState.cutout_path())
 			_refresh_accessories()
 		return
