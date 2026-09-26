@@ -38,10 +38,7 @@ func _ready() -> void:
 	%Friend.mouse_filter = Control.MOUSE_FILTER_STOP
 	%Friend.gui_input.connect(_on_friend_input)
 	%InviteButton.pressed.connect(_on_invite)
-	%MarigoldButton.pressed.connect(_on_friend_chosen.bind("marigold"))
-	%BlossomButton.pressed.connect(_on_friend_chosen.bind("blossom"))
-	%IrisButton.pressed.connect(_on_friend_chosen.bind("iris"))
-	%LilyButton.pressed.connect(_on_friend_chosen.bind("lily"))
+	_setup_friend_buttons()
 	_refresh_friend()
 
 	var idle_timer := Timer.new()
@@ -207,6 +204,19 @@ func _on_invite() -> void:
 	else:
 		%FriendPicker.visible = true
 		%InviteButton.disabled = true
+
+func _setup_friend_buttons() -> void:
+	var buttons: Array[TextureButton] = [%MarigoldButton, %BlossomButton, %IrisButton, %LilyButton]
+	var options := PetalState.friend_options()
+	for i in range(buttons.size()):
+		var btn := buttons[i]
+		if i < options.size():
+			var id := options[i]
+			btn.visible = true
+			btn.texture_normal = load(PetalState.FRIENDS[id]["cutout"])
+			btn.pressed.connect(_on_friend_chosen.bind(id))
+		else:
+			btn.visible = false
 
 func _on_friend_chosen(id: String) -> void:
 	%FriendPicker.visible = false

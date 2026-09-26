@@ -69,6 +69,7 @@ const PETS := {
 		},
 		"exclusive_groups": [],
 		"tricks": ["sit", "come", "wave"],
+		"friends": ["coco", "biscuit"],
 		"rooms": {
 			"bedroom": "res://Sprites/backgrounds/pompom_bedroom.jpg",
 		},
@@ -99,6 +100,7 @@ const PETS := {
 			"bath": "res://Sprites/backgrounds/sheila_bath.jpg",
 		},
 		"tricks": ["sit", "come", "wave"],
+		"friends": ["coco", "biscuit"],
 	},
 	"kiwi": {
 		"name": "Kiwi",
@@ -121,6 +123,7 @@ const PETS := {
 			"dressup": "res://Sprites/backgrounds/bird_dressup.jpg",
 		},
 		"tricks": ["sing"],
+		"friends": ["raspberry"],
 	},
 }
 
@@ -202,8 +205,21 @@ const FRIENDS := {
 	"blossom": {"name": "Princess Blossom", "cutout": "res://Sprites/friend_blossom.png"},
 	"iris": {"name": "Princess Iris", "cutout": "res://Sprites/friend_iris.png"},
 	"lily": {"name": "Princess Lily", "cutout": "res://Sprites/friend_lily.png"},
+	"biscuit": {"name": "Biscuit", "cutout": "res://Sprites/friend_biscuit.png"},
+	"coco": {"name": "Coco", "cutout": "res://Sprites/friend_coco.png"},
+	"raspberry": {"name": "Raspberry", "cutout": "res://Sprites/friend_raspberry.png"},
 }
+const DEFAULT_FRIEND_OPTIONS: Array[String] = ["marigold", "blossom", "iris", "lily"]
 var visiting_friend := ""
+
+# The active pet's own circle of friends (dogs only know other dogs, etc.) -
+# falls back to the default princess friends for pets that don't set one.
+func friend_options() -> Array[String]:
+	var options: Array = PETS[active_pet].get("friends", DEFAULT_FRIEND_OPTIONS)
+	var typed: Array[String] = []
+	for id in options:
+		typed.append(String(id))
+	return typed
 
 var hunger: float:
 	get: return pet_records[active_pet]["hunger"]
